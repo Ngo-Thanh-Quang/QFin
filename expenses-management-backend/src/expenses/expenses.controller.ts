@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, Param, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
 import { ExpensesService } from './expenses.service';
 import { CreateExpenseDto } from './dto/create-expense.dto';
 import { FirebaseAuthGuard } from '../auth/firebase-auth.guard';
@@ -49,6 +49,21 @@ export class ExpensesController {
     const today = new Date();
     const [y, m] = month ? month.split('-').map(Number) : [today.getFullYear(), today.getMonth() + 1];
     return this.svc.getMonthlySummary(uid, y, m);
+  }
+
+  @UseGuards(FirebaseAuthGuard)
+  @Get('summary-week')
+  async summaryWeek(@Req() req: Request, @Query('date') date?: string) {
+    const uid = (req as any).user?.uid;
+    let baseDate = new Date();
+    if (date) {
+      const parsed = new Date(date);
+      if (Number.isNaN(parsed.getTime())) {
+        throw new BadRequestException('Ngày không hợp lệ, định dạng YYYY-MM-DD');
+      }
+      baseDate = parsed;
+    }
+    return this.svc.getWeeklySummary(uid, baseDate);
   }
 
   @UseGuards(FirebaseAuthGuard)

@@ -11,6 +11,7 @@ import { formatAmount, formatDate, toDateInputValue } from "./formatters";
 import { AllTransactionsModal } from "./AllTransactionsModal";
 import { EditExpenseModal } from "./EditExpenseModal";
 import { ConfirmDeleteModal } from "./ConfirmDeleteModal";
+import { useExpensesRefreshStore } from "@/lib/store/expensesRefreshStore";
 
 type RecentTransactionsProps = {
   refreshKey?: number;
@@ -18,6 +19,7 @@ type RecentTransactionsProps = {
 
 export function RecentTransactions({ refreshKey }: RecentTransactionsProps) {
   const { user, initializing } = useAuthUser();
+  const bumpExpensesRefresh = useExpensesRefreshStore((state) => state.bump);
   const [items, setItems] = useState<ExpenseItem[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
@@ -201,6 +203,7 @@ export function RecentTransactions({ refreshKey }: RecentTransactionsProps) {
       });
       setEditingItem(null);
       setLocalRefreshKey((prev) => prev + 1);
+      bumpExpensesRefresh();
     } catch (err) {
       console.error(err);
     } finally {
@@ -218,6 +221,7 @@ export function RecentTransactions({ refreshKey }: RecentTransactionsProps) {
       setOpenActionId(null);
       setDeleteTarget(null);
       setLocalRefreshKey((prev) => prev + 1);
+      bumpExpensesRefresh();
     } catch (err) {
       console.error(err);
     } finally {

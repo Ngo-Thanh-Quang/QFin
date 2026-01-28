@@ -98,7 +98,7 @@ export function DashboardContent() {
             )}
 
             {/* Stat Cards with Gradients */}
-            <StatCards />
+            <StatCards refreshKey={expensesRefreshKey} />
 
             {/* Charts Section */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
@@ -106,7 +106,7 @@ export function DashboardContent() {
                 <YearStatsChart />
 
                 {/* Chi tiêu tháng này */}
-                <MonthlyExpensesPie />
+                <MonthlyExpensesPie refreshKey={expensesRefreshKey} />
             </div>
 
             <RecentTransactions refreshKey={expensesRefreshKey} />

@@ -1,4 +1,5 @@
-import { ChevronRight, X } from "lucide-react";
+import { ChevronRight, Pencil, X } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { CardsTab } from "../cards/CardsTab";
 import type { CardItem } from "../cards/types";
 
@@ -11,6 +12,7 @@ type BudgetModalProps = {
     formattedIncomeAmount: string;
     formattedMonthlyExpense: string;
     formattedCurrentBalance: string;
+    onIncomeCommit?: (amount: number) => Promise<void> | void;
     cardCounts: { credit: number; debit: number; total: number };
     creditCards: CardItem[];
     debitCards: CardItem[];
@@ -31,6 +33,7 @@ export function BudgetModal({
     formattedIncomeAmount,
     formattedMonthlyExpense,
     formattedCurrentBalance,
+    onIncomeCommit,
     cardCounts,
     creditCards,
     debitCards,
@@ -41,6 +44,62 @@ export function BudgetModal({
     formatCardNumber,
     formatExpiry,
 }: BudgetModalProps) {
+    const [isIncomeReveal, setIsIncomeReveal] = useState(false);
+    const [isIncomeEditing, setIsIncomeEditing] = useState(false);
+    const [isIncomeSaving, setIsIncomeSaving] = useState(false);
+    const [incomeValue, setIncomeValue] = useState(10400000);
+    const [incomeInput, setIncomeInput] = useState("10400000");
+
+    const parseAmount = (value: string) => {
+        const digits = value.replace(/[^\d]/g, "");
+        return digits ? Number(digits) : 0;
+    };
+
+    const initialIncomeValue = useMemo(() => {
+        const parsed = parseAmount(formattedIncomeAmount);
+        return parsed || 10400000;
+    }, [formattedIncomeAmount]);
+
+    useEffect(() => {
+        if (!open) return;
+        setIncomeValue(initialIncomeValue);
+        setIncomeInput(String(initialIncomeValue));
+        setIsIncomeReveal(false);
+        setIsIncomeEditing(false);
+    }, [open, initialIncomeValue]);
+
+    const commitIncome = async () => {
+        const parsed = parseAmount(incomeInput);
+        const finalValue = parsed || 10400000;
+        if (isIncomeSaving) return;
+
+        setIsIncomeSaving(true);
+        try {
+            if (onIncomeCommit) {
+                await onIncomeCommit(finalValue);
+            }
+            setIncomeValue(finalValue);
+            setIncomeInput(String(finalValue));
+        } catch (error) {
+            setIncomeInput(String(incomeValue));
+        } finally {
+            setIsIncomeSaving(false);
+            setIsIncomeEditing(false);
+            setIsIncomeReveal(false);
+        }
+    };
+
+    const cancelIncomeEdit = () => {
+        setIncomeInput(String(incomeValue));
+        setIsIncomeEditing(false);
+        setIsIncomeReveal(false);
+    };
+
+    const formattedIncomeDisplay = useMemo(
+        () => incomeValue.toLocaleString("vi-VN"),
+        [incomeValue]
+    );
+
     if (!open) return null;
 
     return (
@@ -90,16 +149,75 @@ export function BudgetModal({
                     {activeTab === "info" && (
                         <div className="space-y-4">
                             <div className="grid grid-cols-2 gap-2 lg:gap-4">
-                                <div className="flex items-center justify-between rounded-xl border border-gray-200 px-4 py-3 lg:py-4 relative">
-                                    <span className="text-xs lg:text-sm font-semibold text-green-600 absolute lg:static -top-2 bg-white">
+                                <div
+                                    className="flex items-center justify-between rounded-xl border border-gray-200 px-4 py-3 lg:py-4 relative overflow-hidden cursor-pointer"
+                                    onClick={() => {
+                                        if (!isIncomeEditing) {
+                                            setIsIncomeReveal((prev) => !prev);
+                                        }
+                                    }}
+                                    onMouseLeave={() => {
+                                        if (!isIncomeEditing) {
+                                            setIsIncomeReveal(false);
+                                        }
+                                    }}
+                                >
+                                    <span className="text-xs lg:text-sm font-semibold text-green-600 absolute lg:static -top-2 bg-white px-1">
                                         Thu nhập
                                     </span>
-                                    <span className="text-base lg:text-lg font-bold text-green-600">
-                                        <span className="hidden lg:inline">+ </span>{formattedIncomeAmount}
-                                    </span>
+                                    <div
+                                        className={`flex items-center justify-end gap-2 transition-transform duration-500 ${
+                                            isIncomeReveal ? "-translate-x-10" : "translate-x-0"
+                                        }`}
+                                    >
+                                        <span className="text-base lg:text-lg font-bold text-green-600">
+                                            <span className="hidden lg:inline">+ </span>
+                                            {isIncomeEditing ? (
+                                                <input
+                                                    value={incomeInput}
+                                                    onClick={(event) => event.stopPropagation()}
+                                                    onChange={(event) => {
+                                                        const nextValue = event.target.value.replace(/[^\d]/g, "");
+                                                        setIncomeInput(nextValue);
+                                                    }}
+                                                    onBlur={commitIncome}
+                                                    onKeyDown={(event) => {
+                                                        if (event.key === "Enter") {
+                                                            commitIncome();
+                                                        }
+                                                        if (event.key === "Escape") {
+                                                            cancelIncomeEdit();
+                                                        }
+                                                    }}
+                                                    inputMode="numeric"
+                                                    disabled={isIncomeSaving}
+                                                    className="w-28 lg:w-36 bg-transparent text-green-700 focus:outline-none"
+                                                    autoFocus
+                                                />
+                                            ) : (
+                                                formattedIncomeDisplay
+                                            )}
+                                        </span>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={(event) => {
+                                            event.stopPropagation();
+                                            setIsIncomeEditing(true);
+                                            setIsIncomeReveal(true);
+                                        }}
+                                        className={`absolute right-3 top-1/2 -translate-y-1/2 rounded-lg bg-green-50 p-2 text-green-600 transition-all duration-500 ${
+                                            isIncomeReveal
+                                                ? "opacity-100 translate-x-0"
+                                                : "opacity-0 translate-x-6 pointer-events-none"
+                                        }`}
+                                        aria-label="Chỉnh sửa thu nhập"
+                                    >
+                                        <Pencil className="h-4 w-4" />
+                                    </button>
                                 </div>
                                 <div className="flex items-center justify-between rounded-xl border border-gray-200 px-4 py-3 lg:py-4 relative">
-                                    <span className="text-xs lg:text-sm font-semibold text-red-600 absolute lg:static -top-2 bg-white">
+                                    <span className="text-xs lg:text-sm font-semibold text-red-600 absolute lg:static -top-2 bg-white px-1">
                                         Chi tiêu
                                     </span>
                                     <span className="text-base lg:text-lg font-bold text-red-600">
@@ -108,7 +226,7 @@ export function BudgetModal({
                                 </div>
                             </div>
                             <div className="flex items-center justify-between rounded-xl border border-gray-200 px-4 py-3 lg:py-4 relative">
-                                <span className="text-xs lg:text-sm font-semibold text-gray-600 absolute lg:static -top-2 bg-white">
+                                <span className="text-xs lg:text-sm font-semibold text-gray-600 absolute lg:static -top-2 bg-white px-1">
                                     Số dư tháng này
                                 </span>
                                 <span className="text-base lg:text-lg font-bold text-gray-900">
@@ -117,7 +235,7 @@ export function BudgetModal({
                             </div>
                             <div className="grid grid-cols-2 gap-2 lg:gap-4">
                                 <div className="flex items-center justify-between rounded-xl border border-gray-200 px-4 py-3 lg:py-4 relative">
-                                    <span className="text-xs lg:text-sm font-semibold text-gray-600 absolute lg:static -top-2 bg-white">
+                                    <span className="text-xs lg:text-sm font-semibold text-gray-600 absolute lg:static -top-2 bg-white px-1">
                                         Tiết kiệm
                                     </span>
                                     <span className="text-base lg:text-lg font-bold text-gray-900">
@@ -125,7 +243,7 @@ export function BudgetModal({
                                     </span>
                                 </div>
                                 <div className="flex items-center justify-between rounded-xl border border-gray-200 px-4 py-3 lg:py-4 relative">
-                                    <span className="text-xs lg:text-sm font-semibold text-gray-600 absolute lg:static -top-2 bg-white">
+                                    <span className="text-xs lg:text-sm font-semibold text-gray-600 absolute lg:static -top-2 bg-white px-1">
                                         Mục tiêu
                                     </span>
                                     <span className="text-base lg:text-lg font-bold text-gray-900">
@@ -134,7 +252,7 @@ export function BudgetModal({
                                 </div>
                             </div>
                             <div className="flex items-center justify-between rounded-xl border border-gray-200 px-4 py-3 lg:py-4 relative">
-                                <span className="text-xs lg:text-sm font-semibold text-gray-600 absolute lg:static -top-2 bg-white">
+                                <span className="text-xs lg:text-sm font-semibold text-gray-600 absolute lg:static -top-2 bg-white px-1">
                                     Tổng số dư
                                 </span>
                                 <span className="text-base lg:text-lg font-bold text-gray-900">
@@ -142,7 +260,7 @@ export function BudgetModal({
                                 </span>
                             </div>
                             <div onClick={onOpenCardsTab} className="flex items-center justify-between rounded-xl border border-gray-200 px-4 py-3 lg:py-4 relative cursor-pointer hover:bg-gray-100  transition duration-500">
-                                <span className="text-xs lg:text-sm font-semibold text-gray-600 absolute lg:static -top-2 bg-white lg:bg-transparent">
+                                <span className="text-xs lg:text-sm font-semibold text-gray-600 absolute lg:static -top-2 bg-white px-1 lg:bg-transparent">
                                     Số thẻ hiện có
                                 </span>
                                 <span className="text-base lg:text-lg font-bold text-gray-900">

@@ -30,6 +30,19 @@ export class ExpensesService {
     return categoryId || 'uncategorized';
   }
 
+  private getWeekRange(date: Date) {
+    const base = new Date(date);
+    const day = base.getDay();
+    const diffToMonday = (day + 6) % 7;
+    const start = new Date(base);
+    start.setDate(base.getDate() - diffToMonday);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(start);
+    end.setDate(start.getDate() + 6);
+    end.setHours(23, 59, 59, 999);
+    return { start, end };
+  }
+
   async createExpense(uid: string, dto: CreateExpenseDto) {
     const amount = this.parseAmount(dto.amount);
     const currency = dto.currency ?? 'VND';
@@ -137,6 +150,25 @@ export class ExpensesService {
     return {
       current: { month: currentId, totalExpense: currentTotal },
       previous: { month: prevId, totalExpense: prevTotal },
+    };
+  }
+
+  async getWeeklySummary(uid: string, date: Date) {
+    const { start, end } = this.getWeekRange(date);
+    const userDocRef = this.db.collection('users').doc(uid);
+    const col = userDocRef.collection('expenses');
+    const snap = await col
+      .where('type', '==', 'expense')
+      .where('date', '>=', admin.firestore.Timestamp.fromDate(start))
+      .where('date', '<=', admin.firestore.Timestamp.fromDate(end))
+      .get();
+
+    const totalExpense = snap.docs.reduce((sum, d) => sum + Number(d.data()?.amount ?? 0), 0);
+
+    return {
+      start: start.toISOString().slice(0, 10),
+      end: end.toISOString().slice(0, 10),
+      totalExpense,
     };
   }
 

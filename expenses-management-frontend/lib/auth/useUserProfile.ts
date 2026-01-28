@@ -9,6 +9,7 @@ type UserProfile = {
   avatar?: string;
   email?: string;
   phone?: string;
+  incomeAmount?: number;
 };
 
 export function useUserProfile() {

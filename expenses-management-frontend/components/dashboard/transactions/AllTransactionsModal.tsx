@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { ExpensesCategories } from "../data/dashboardData";
 import type { ExpenseItem } from "./types";
 import { formatAmount, formatDate } from "./formatters";
@@ -19,6 +20,17 @@ export function AllTransactionsModal({
   loading,
   error,
 }: AllTransactionsModalProps) {
+  useEffect(() => {
+    if (!open) return;
+
+    const { overflow } = document.body.style;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = overflow;
+    };
+  }, [open]);
+
   if (!open) return null;
 
   return (

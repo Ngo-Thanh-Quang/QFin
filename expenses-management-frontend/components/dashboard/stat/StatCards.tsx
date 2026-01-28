@@ -3,12 +3,30 @@
 import { TrendingDown, TrendingUp } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useAuthUser } from "@/lib/auth/useAuthUser";
+import { useUserProfile } from "@/lib/auth/useUserProfile";
+import { useIncomeStore } from "@/lib/store/incomeStore";
+import { useExpensesRefreshStore } from "@/lib/store/expensesRefreshStore";
 
-export function StatCards() {
+type StatCardsProps = {
+    refreshKey?: number;
+};
+
+export function StatCards({ refreshKey }: StatCardsProps) {
     const { user, initializing } = useAuthUser();
+    const { profile } = useUserProfile();
+    const expensesRefreshKey = useExpensesRefreshStore((state) => state.refreshKey);
     const [totalExpense, setTotalExpense] = useState(0);
     const [prevTotalExpense, setPrevTotalExpense] = useState(0);
-    const incomeAmount = 10400000;
+    const [weeklyExpense, setWeeklyExpense] = useState(0);
+    const incomeAmount = useIncomeStore((state) => state.incomeAmount);
+    const hydrateIncomeAmount = useIncomeStore((state) => state.hydrateIncomeAmount);
+
+    useEffect(() => {
+        const parsed = Number(profile?.incomeAmount);
+        if (!Number.isNaN(parsed) && parsed >= 0) {
+            hydrateIncomeAmount(parsed);
+        }
+    }, [profile, hydrateIncomeAmount]);
 
     useEffect(() => {
         let isActive = true;
@@ -17,32 +35,47 @@ export function StatCards() {
             if (!user || initializing) {
                 setTotalExpense(0);
                 setPrevTotalExpense(0);
+                setWeeklyExpense(0);
                 return;
             }
 
             try {
                 const idToken = await user.getIdToken();
-                const res = await fetch(
-                    `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/expenses/summary`,
-                    {
+                const [summaryRes, weeklyRes] = await Promise.all([
+                    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/expenses/summary`, {
                         headers: {
                             Authorization: `Bearer ${idToken}`,
                         },
-                    }
-                );
+                    }),
+                    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/expenses/summary-week`, {
+                        headers: {
+                            Authorization: `Bearer ${idToken}`,
+                        },
+                    }),
+                ]);
 
-                if (!res.ok) {
-                    throw new Error(`Summary fetch failed: ${res.status}`);
+                if (summaryRes.ok) {
+                    const data = await summaryRes.json();
+                    if (!isActive) return;
+                    setTotalExpense(Number(data?.current?.totalExpense ?? 0));
+                    setPrevTotalExpense(Number(data?.previous?.totalExpense ?? 0));
+                } else if (isActive) {
+                    setTotalExpense(0);
+                    setPrevTotalExpense(0);
                 }
 
-                const data = await res.json();
-                if (!isActive) return;
-                setTotalExpense(Number(data?.current?.totalExpense ?? 0));
-                setPrevTotalExpense(Number(data?.previous?.totalExpense ?? 0));
+                if (weeklyRes.ok) {
+                    const weeklyData = await weeklyRes.json();
+                    if (!isActive) return;
+                    setWeeklyExpense(Number(weeklyData?.totalExpense ?? 0));
+                } else if (isActive) {
+                    setWeeklyExpense(0);
+                }
             } catch (err) {
                 if (isActive) {
                     setTotalExpense(0);
                     setPrevTotalExpense(0);
+                    setWeeklyExpense(0);
                 }
             }
         };
@@ -52,7 +85,7 @@ export function StatCards() {
         return () => {
             isActive = false;
         };
-    }, [user, initializing]);
+    }, [user, initializing, refreshKey, expensesRefreshKey]);
 
     const formattedTotalExpense = useMemo(
         () => totalExpense.toLocaleString("vi-VN"),
@@ -61,6 +94,10 @@ export function StatCards() {
     const formattedCurrentBalance = useMemo(
         () => (incomeAmount - totalExpense).toLocaleString("vi-VN"),
         [incomeAmount, totalExpense]
+    );
+    const formattedWeeklyExpense = useMemo(
+        () => weeklyExpense.toLocaleString("vi-VN"),
+        [weeklyExpense]
     );
 
     const percentChange = useMemo(() => {
@@ -104,7 +141,7 @@ export function StatCards() {
                         <div className="flex items-start justify-between mb-12">
                             <div>
                                 <p className="text-white/80 font-medium mb-2">Chi tiêu tuần này</p>
-                                <h3 className="text-4xl font-bold">200,000</h3>
+                                <h3 className="text-4xl font-bold">{formattedWeeklyExpense}</h3>
                             </div>
                             <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
                                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">

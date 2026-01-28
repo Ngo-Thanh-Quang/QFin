@@ -6,7 +6,11 @@ import { ResponsiveContainer, PieChart, Pie, Cell } from "recharts"
 import { ExpensesCategories } from "../data/dashboardData";
 import { useAuthUser } from "@/lib/auth/useAuthUser";
 
-export default function MonthlyExpensesPie() {
+type MonthlyExpensesPieProps = {
+    refreshKey?: number;
+};
+
+export default function MonthlyExpensesPie({ refreshKey }: MonthlyExpensesPieProps) {
     const currentMonth = new Date().getMonth() + 1;
     const { user, initializing } = useAuthUser();
     const [byCategory, setByCategory] = useState<Record<string, number>>({});
@@ -61,7 +65,7 @@ export default function MonthlyExpensesPie() {
         return () => {
             isActive = false;
         };
-    }, [user, initializing]);
+    }, [user, initializing, refreshKey]);
 
     const chartData = useMemo(() => {
         if (!totalExpense) return [];

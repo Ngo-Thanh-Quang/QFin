@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { settingsCategories } from "../dashboard/data/dashboardData";
 import { useAuthUser } from "@/lib/auth/useAuthUser";
+import { useUserProfile } from "@/lib/auth/useUserProfile";
+import { useIncomeStore } from "@/lib/store/incomeStore";
 import { AddCardModal } from "./cards/AddCardModal";
 import { DeleteConfirmModal } from "./cards/DeleteConfirmModal";
 import { EditCardModal } from "./cards/EditCardModal";
@@ -19,6 +21,10 @@ type SettingsSidebarProps = {
 
 export function SettingsSidebar({ open, onClose, onOpenAddExpense }: SettingsSidebarProps) {
     const { user, initializing } = useAuthUser();
+    const { profile } = useUserProfile();
+    const incomeAmount = useIncomeStore((state) => state.incomeAmount);
+    const setIncomeAmount = useIncomeStore((state) => state.setIncomeAmount);
+    const hydrateIncomeAmount = useIncomeStore((state) => state.hydrateIncomeAmount);
     const [isBudgetOpen, setIsBudgetOpen] = useState(false);
     const [activeTab, setActiveTab] = useState<"info" | "savings" | "cards">("info");
     const [monthlyExpense, setMonthlyExpense] = useState(0);
@@ -53,7 +59,13 @@ export function SettingsSidebar({ open, onClose, onOpenAddExpense }: SettingsSid
         handleUpdateCard,
         handleDeleteCard,
     } = useCardsManager({ user, initializing, isBudgetOpen });
-    const incomeAmount = 10400000;
+    useEffect(() => {
+        if (!profile) return;
+        const nextValue = Number(profile.incomeAmount);
+        if (!Number.isNaN(nextValue) && nextValue >= 0) {
+            hydrateIncomeAmount(nextValue);
+        }
+    }, [profile, hydrateIncomeAmount]);
 
     useEffect(() => {
         let isActive = true;
@@ -110,6 +122,28 @@ export function SettingsSidebar({ open, onClose, onOpenAddExpense }: SettingsSid
         [incomeAmount, monthlyExpense]
     );
 
+    const saveIncomeAmount = async (amount: number) => {
+        if (!user || initializing) return;
+        const idToken = await user.getIdToken();
+        const res = await fetch(
+            `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/users/me/income`,
+            {
+                method: "PATCH",
+                headers: {
+                    Authorization: `Bearer ${idToken}`,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ incomeAmount: amount }),
+            }
+        );
+
+        if (!res.ok) {
+            throw new Error(`Update income failed: ${res.status}`);
+        }
+
+        setIncomeAmount(amount);
+    };
+
     return (
         <>
             <SidebarLayout open={open} onClose={onClose}>
@@ -138,6 +172,7 @@ export function SettingsSidebar({ open, onClose, onOpenAddExpense }: SettingsSid
                 formattedIncomeAmount={formattedIncomeAmount}
                 formattedMonthlyExpense={formattedMonthlyExpense}
                 formattedCurrentBalance={formattedCurrentBalance}
+                onIncomeCommit={saveIncomeAmount}
                 cardCounts={cardCounts}
                 creditCards={creditCards}
                 debitCards={debitCards}
