@@ -8,6 +8,7 @@ export function StatCards() {
     const { user, initializing } = useAuthUser();
     const [totalExpense, setTotalExpense] = useState(0);
     const [prevTotalExpense, setPrevTotalExpense] = useState(0);
+    const incomeAmount = 10400000;
 
     useEffect(() => {
         let isActive = true;
@@ -56,6 +57,10 @@ export function StatCards() {
     const formattedTotalExpense = useMemo(
         () => totalExpense.toLocaleString("vi-VN"),
         [totalExpense]
+    );
+    const formattedCurrentBalance = useMemo(
+        () => (incomeAmount - totalExpense).toLocaleString("vi-VN"),
+        [incomeAmount, totalExpense]
     );
 
     const percentChange = useMemo(() => {
@@ -112,7 +117,9 @@ export function StatCards() {
                                 </svg>
                             </div>
                         </div>
-                        <p className="text-white/80">So với mục tiêu</p>
+                        <span className="text-white/80">
+                            Số dư tháng này: <span className="font-bold">{formattedCurrentBalance}</span>
+                        </span>
                     </div>
                 </div>
 
