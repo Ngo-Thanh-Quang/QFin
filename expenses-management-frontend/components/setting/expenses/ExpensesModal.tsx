@@ -8,6 +8,7 @@ import { ExpenseDetailsStep } from "./ExpenseDetailsStep"
 import { addExpenses } from "@/lib/expenses/addExpenses"
 import { ExpensesCategories } from "@/components/dashboard/data/dashboardData"
 import { getAuth } from "firebase/auth"
+import { useExpensesRefreshStore } from "@/lib/store/expensesRefreshStore"
 
 export function AddExpenseModal({
   open,
@@ -31,6 +32,7 @@ export function AddExpenseModal({
   const [expenseAmount, setExpenseAmount] = useState("")
   const [expenseCategory, setExpenseCategory] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const bumpExpensesRefresh = useExpensesRefreshStore((state) => state.bump)
 
   useEffect(() => {
     if (open) {
@@ -114,6 +116,7 @@ export function AddExpenseModal({
 
       const result = await addExpenses(idToken, payload);
       console.log('created', result);
+      bumpExpensesRefresh();
       onCreated?.()
       onNotify?.({
         type: "success",

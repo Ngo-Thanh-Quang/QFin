@@ -81,4 +81,12 @@ export class ExpensesController {
     const uid = (req as any).user?.uid;
     return this.svc.getAllExpenses(uid);
   }
+
+  @UseGuards(FirebaseAuthGuard)
+  @Get('monthly')
+  async monthlyTotals(@Req() req: Request, @Query('year') year?: string) {
+    const uid = (req as any).user?.uid;
+    const targetYear = year ? Number(year) : new Date().getFullYear();
+    return this.svc.getMonthlyTotalsForYear(uid, targetYear);
+  }
 }

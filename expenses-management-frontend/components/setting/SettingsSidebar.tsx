@@ -5,6 +5,7 @@ import { settingsCategories } from "../dashboard/data/dashboardData";
 import { useAuthUser } from "@/lib/auth/useAuthUser";
 import { useUserProfile } from "@/lib/auth/useUserProfile";
 import { useIncomeStore } from "@/lib/store/incomeStore";
+import { useIncomeRefreshStore } from "@/lib/store/incomeRefreshStore";
 import { AddCardModal } from "./cards/AddCardModal";
 import { DeleteConfirmModal } from "./cards/DeleteConfirmModal";
 import { EditCardModal } from "./cards/EditCardModal";
@@ -25,6 +26,7 @@ export function SettingsSidebar({ open, onClose, onOpenAddExpense }: SettingsSid
     const incomeAmount = useIncomeStore((state) => state.incomeAmount);
     const setIncomeAmount = useIncomeStore((state) => state.setIncomeAmount);
     const hydrateIncomeAmount = useIncomeStore((state) => state.hydrateIncomeAmount);
+    const bumpIncomeRefresh = useIncomeRefreshStore((state) => state.bump);
     const [isBudgetOpen, setIsBudgetOpen] = useState(false);
     const [activeTab, setActiveTab] = useState<"info" | "savings" | "cards">("info");
     const [monthlyExpense, setMonthlyExpense] = useState(0);
@@ -142,6 +144,7 @@ export function SettingsSidebar({ open, onClose, onOpenAddExpense }: SettingsSid
         }
 
         setIncomeAmount(amount);
+        bumpIncomeRefresh();
     };
 
     return (

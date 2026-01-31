@@ -104,13 +104,31 @@ export class UsersService {
             const uid = decoded.uid;
 
             const docRef = this.adminDb.collection('users').doc(uid);
-            await docRef.set(
-                {
-                    incomeAmount: dto.incomeAmount,
-                    updatedAt: new Date(),
-                },
-                { merge: true },
-            );
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = now.getMonth() + 1;
+            const monthId = `${year}-${String(month).padStart(2, '0')}`;
+            const monthlyRef = docRef.collection('monthly').doc(monthId);
+
+            await this.adminDb.runTransaction(async (tx) => {
+                tx.set(
+                    docRef,
+                    {
+                        incomeAmount: dto.incomeAmount,
+                        updatedAt: now,
+                    },
+                    { merge: true },
+                );
+                tx.set(
+                    monthlyRef,
+                    {
+                        month: monthId,
+                        totalIncome: dto.incomeAmount,
+                        updatedAt: now,
+                    },
+                    { merge: true },
+                );
+            });
 
             return { ok: true, incomeAmount: dto.incomeAmount };
         } catch (error) {

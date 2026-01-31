@@ -188,6 +188,29 @@ export class ExpensesService {
     };
   }
 
+  async getMonthlyTotalsForYear(uid: string, year: number) {
+    const userDocRef = this.db.collection('users').doc(uid);
+    const col = userDocRef.collection('monthly');
+    const startId = `${year}-01`;
+    const endId = `${year}-12`;
+    const snap = await col
+      .where('month', '>=', startId)
+      .where('month', '<=', endId)
+      .orderBy('month', 'asc')
+      .get();
+
+    const items = snap.docs.map((doc) => {
+      const data = doc.data() as any;
+      return {
+        month: data.month || doc.id,
+        totalExpense: Number(data.totalExpense ?? 0),
+        totalIncome: Number(data.totalIncome ?? 0),
+      };
+    });
+
+    return { year, items };
+  }
+
   async updateExpense(uid: string, expenseId: string, dto: UpdateExpenseDto) {
     const userDocRef = this.db.collection('users').doc(uid);
     const expenseRef = userDocRef.collection('expenses').doc(expenseId);

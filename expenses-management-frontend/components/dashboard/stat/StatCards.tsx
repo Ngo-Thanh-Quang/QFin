@@ -6,6 +6,8 @@ import { useAuthUser } from "@/lib/auth/useAuthUser";
 import { useUserProfile } from "@/lib/auth/useUserProfile";
 import { useIncomeStore } from "@/lib/store/incomeStore";
 import { useExpensesRefreshStore } from "@/lib/store/expensesRefreshStore";
+import { useSavingsRefreshStore } from "@/lib/store/savingsRefreshStore";
+import { useIncomeRefreshStore } from "@/lib/store/incomeRefreshStore";
 
 type StatCardsProps = {
     refreshKey?: number;
@@ -15,9 +17,12 @@ export function StatCards({ refreshKey }: StatCardsProps) {
     const { user, initializing } = useAuthUser();
     const { profile } = useUserProfile();
     const expensesRefreshKey = useExpensesRefreshStore((state) => state.refreshKey);
+    const savingsRefreshKey = useSavingsRefreshStore((state) => state.refreshKey);
+    const incomeRefreshKey = useIncomeRefreshStore((state) => state.refreshKey);
     const [totalExpense, setTotalExpense] = useState(0);
     const [prevTotalExpense, setPrevTotalExpense] = useState(0);
     const [weeklyExpense, setWeeklyExpense] = useState(0);
+    const [totalSavingsAll, setTotalSavingsAll] = useState(0);
     const incomeAmount = useIncomeStore((state) => state.incomeAmount);
     const hydrateIncomeAmount = useIncomeStore((state) => state.hydrateIncomeAmount);
 
@@ -41,13 +46,18 @@ export function StatCards({ refreshKey }: StatCardsProps) {
 
             try {
                 const idToken = await user.getIdToken();
-                const [summaryRes, weeklyRes] = await Promise.all([
+                const [summaryRes, weeklyRes, savingsRes] = await Promise.all([
                     fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/expenses/summary`, {
                         headers: {
                             Authorization: `Bearer ${idToken}`,
                         },
                     }),
                     fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/expenses/summary-week`, {
+                        headers: {
+                            Authorization: `Bearer ${idToken}`,
+                        },
+                    }),
+                    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/savings/summary`, {
                         headers: {
                             Authorization: `Bearer ${idToken}`,
                         },
@@ -71,11 +81,20 @@ export function StatCards({ refreshKey }: StatCardsProps) {
                 } else if (isActive) {
                     setWeeklyExpense(0);
                 }
+
+                if (savingsRes.ok) {
+                    const savingsData = await savingsRes.json();
+                    if (!isActive) return;
+                    setTotalSavingsAll(Number(savingsData?.totalAmount ?? 0));
+                } else if (isActive) {
+                    setTotalSavingsAll(0);
+                }
             } catch (err) {
                 if (isActive) {
                     setTotalExpense(0);
                     setPrevTotalExpense(0);
                     setWeeklyExpense(0);
+                    setTotalSavingsAll(0);
                 }
             }
         };
@@ -85,7 +104,7 @@ export function StatCards({ refreshKey }: StatCardsProps) {
         return () => {
             isActive = false;
         };
-    }, [user, initializing, refreshKey, expensesRefreshKey]);
+    }, [user, initializing, refreshKey, expensesRefreshKey, savingsRefreshKey, incomeRefreshKey]);
 
     const formattedTotalExpense = useMemo(
         () => totalExpense.toLocaleString("vi-VN"),
@@ -98,6 +117,10 @@ export function StatCards({ refreshKey }: StatCardsProps) {
     const formattedWeeklyExpense = useMemo(
         () => weeklyExpense.toLocaleString("vi-VN"),
         [weeklyExpense]
+    );
+    const formattedTotalSavingsAll = useMemo(
+        () => totalSavingsAll.toLocaleString("vi-VN"),
+        [totalSavingsAll]
     );
 
     const percentChange = useMemo(() => {
@@ -174,7 +197,9 @@ export function StatCards({ refreshKey }: StatCardsProps) {
                                 </svg>
                             </div>
                         </div>
-                        <p className="text-white/80">Tổng tiền tiết kiệm: <b>5,000,000</b></p>
+                        <p className="text-white/80">
+                            Tổng tiền tiết kiệm: <b>{formattedTotalSavingsAll}</b>
+                        </p>
                     </div>
                 </div>
             </div>
