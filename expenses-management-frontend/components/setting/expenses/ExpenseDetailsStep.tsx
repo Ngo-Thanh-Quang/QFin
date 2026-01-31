@@ -110,7 +110,7 @@ export function ExpenseDetailsStep({
                     key={category.id}
                     onClick={() => onChangeCategory(category.id)}
                     className={`
-                      p-4 rounded-xl border-2 transition-all duration-200 text-left flex gap-4
+                      p-4 rounded-xl border-2 transition-all duration-200 text-left flex gap-2 lg:gap-4
                       ${expenseCategory === category.id
                         ? `bg-gradient-to-r ${category.color} text-white border-transparent shadow-lg scale-105`
                         : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"

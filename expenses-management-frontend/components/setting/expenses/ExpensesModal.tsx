@@ -167,7 +167,7 @@ export function AddExpenseModal({
                 <p className="text-sm text-white/80">
                   {step === 1
                     ? "Chọn ngày và giờ giao dịch"
-                    : "Nhập thông tin chi tiêu"}
+                    : "Thông tin chi tiêu"}
                 </p>
               </div>
             </div>

@@ -51,7 +51,7 @@ export function AllTransactionsModal({
             Đóng
           </button>
         </div>
-        <div className="max-h-[70vh] overflow-y-auto p-6 space-y-3">
+        <div className="max-h-[70vh] overflow-y-auto md:p-6 space-y-3">
           {loading && (
             <div className="text-sm text-gray-500">Đang tải giao dịch...</div>
           )}

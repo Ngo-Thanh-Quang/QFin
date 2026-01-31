@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
-import { salesData } from "../data/dashboardData";
+import { expensesData } from "../data/dashboardData";
 import { useIsDesktop } from "@/lib/screen/useIsDesktop"
 
 export function YearStatsChart() {
@@ -35,7 +35,7 @@ export function YearStatsChart() {
             </CardHeader>
             <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={salesData}>
+                    <BarChart data={expensesData}>
                         <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                         <XAxis
                             dataKey="month"
