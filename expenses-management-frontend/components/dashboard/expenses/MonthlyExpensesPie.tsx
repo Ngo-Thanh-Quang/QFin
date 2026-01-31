@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ResponsiveContainer, PieChart, Pie, Cell } from "recharts"
 import { ExpensesCategories } from "../data/dashboardData";
 import { useAuthUser } from "@/lib/auth/useAuthUser";
+import { getMonthKey } from "@/lib/date";
 
 type MonthlyExpensesPieProps = {
     refreshKey?: number;
@@ -36,7 +37,7 @@ export default function MonthlyExpensesPie({ refreshKey }: MonthlyExpensesPiePro
             try {
                 const idToken = await user.getIdToken();
                 const res = await fetch(
-                    `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/expenses/breakdown`,
+                    `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/expenses/breakdown?month=${getMonthKey()}`,
                     {
                         headers: {
                             Authorization: `Bearer ${idToken}`,

@@ -8,6 +8,7 @@ import { useIncomeStore } from "@/lib/store/incomeStore";
 import { useExpensesRefreshStore } from "@/lib/store/expensesRefreshStore";
 import { useSavingsRefreshStore } from "@/lib/store/savingsRefreshStore";
 import { useIncomeRefreshStore } from "@/lib/store/incomeRefreshStore";
+import { getDateKey, getMonthKey } from "@/lib/date";
 
 type StatCardsProps = {
     refreshKey?: number;
@@ -46,13 +47,15 @@ export function StatCards({ refreshKey }: StatCardsProps) {
 
             try {
                 const idToken = await user.getIdToken();
+                const monthKey = getMonthKey();
+                const dateKey = getDateKey();
                 const [summaryRes, weeklyRes, savingsRes] = await Promise.all([
-                    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/expenses/summary`, {
+                    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/expenses/summary?month=${monthKey}`, {
                         headers: {
                             Authorization: `Bearer ${idToken}`,
                         },
                     }),
-                    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/expenses/summary-week`, {
+                    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/expenses/summary-week?date=${dateKey}`, {
                         headers: {
                             Authorization: `Bearer ${idToken}`,
                         },

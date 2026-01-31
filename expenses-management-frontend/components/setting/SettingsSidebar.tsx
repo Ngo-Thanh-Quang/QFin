@@ -6,6 +6,7 @@ import { useAuthUser } from "@/lib/auth/useAuthUser";
 import { useUserProfile } from "@/lib/auth/useUserProfile";
 import { useIncomeStore } from "@/lib/store/incomeStore";
 import { useIncomeRefreshStore } from "@/lib/store/incomeRefreshStore";
+import { getMonthKey } from "@/lib/date";
 import { AddCardModal } from "./cards/AddCardModal";
 import { DeleteConfirmModal } from "./cards/DeleteConfirmModal";
 import { EditCardModal } from "./cards/EditCardModal";
@@ -82,7 +83,7 @@ export function SettingsSidebar({ open, onClose, onOpenAddExpense }: SettingsSid
             try {
                 const idToken = await user.getIdToken();
                 const res = await fetch(
-                    `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/expenses/summary`,
+                    `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/expenses/summary?month=${getMonthKey()}`,
                     {
                         headers: {
                             Authorization: `Bearer ${idToken}`,

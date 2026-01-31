@@ -2,6 +2,7 @@ import { ChevronLeft, ChevronRight, CircleArrowRight, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useAuthUser } from "@/lib/auth/useAuthUser";
 import { useSavingsRefreshStore } from "@/lib/store/savingsRefreshStore";
+import { getMonthKey } from "@/lib/date";
 
 type SavingsTabProps = {
     open: boolean;
@@ -109,7 +110,7 @@ export function SavingsTab({ open, active }: SavingsTabProps) {
             try {
                 const idToken = await user.getIdToken();
                 const [monthlyRes, totalRes] = await Promise.all([
-                    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/savings`, {
+                    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/savings?month=${getMonthKey()}`, {
                         headers: {
                             Authorization: `Bearer ${idToken}`,
                         },
