@@ -25,7 +25,7 @@ export const ExpensesCategories = [
   { id: "entertainment", name: "Giải trí", icon: Film, color: "from-red-500 to-red-600" },
 ]
 
-export const salesData = [
+export const expensesData = [
     { month: "T.1", TN: 4000, CT: 2400, TK: 2210 },
     { month: "T.2", TN: 0, CT: 0, TK: 0 },
     { month: "T.3", TN: 0, CT: 0, TK: 0 },
