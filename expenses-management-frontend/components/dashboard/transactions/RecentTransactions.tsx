@@ -280,7 +280,7 @@ export function RecentTransactions({ refreshKey }: RecentTransactionsProps) {
                           ? `bg-gradient-to-r ${category.color}`
                           : "bg-gray-100";
                         return (
-                            <div key={transaction.id} className="flex items-center justify-between p-4 hover:bg-gray-50 rounded-xl transition-colors">
+                            <div key={transaction.id} className="flex items-center justify-between py-4 lg:p-4 hover:lg:bg-gray-50 rounded-xl transition-colors">
                                 <div className="flex items-center space-x-4 flex-1">
                                     <div className={`${bgClass} p-3 rounded-xl`}>
                                         {Icon ? (
