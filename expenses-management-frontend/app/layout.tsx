@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { AuthProvider } from "@/lib/auth/AuthContext";
@@ -20,6 +21,19 @@ export default function RootLayout({
   return (
     <html lang="vi">
       <body className="flex min-h-screen flex-col bg-gradient-to-br from-indigo-50 via-white to-blue-50">
+        <Script
+          async
+          src="https://www.googletagmanager.com/gtag/js?id=G-ZV8KZX3WP6"
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-ZV8KZX3WP6');
+          `}
+        </Script>
         <AuthProvider>
           <Navbar />
           <main className="flex-1">
